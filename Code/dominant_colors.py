@@ -9,6 +9,7 @@ n_colors = 3
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 200, .1)
 flags = cv2.KMEANS_RANDOM_CENTERS
 
+# The csv to save the results into
 f = open("colors.csv", "w")
 header = "Timestamp"
 for i in range(n_colors):
@@ -23,12 +24,14 @@ img_paths = glob.glob("images/*.jpg")
 j = 0
 
 for path in img_paths:
+	# If this is not the first or only image from the post, don't analyze it.
 	if re.search(r".*((UTC)|(_1)).jpg", path) is None:
 		continue
 	img = io.imread(path, plugin='matplotlib')
 
 	pixels = np.float32(img.reshape(-1, 3))
-
+	
+	# Run k-means to find the n most dominant colors
 	_, labels, palette = cv2.kmeans(pixels, n_colors, None, criteria, 10, flags)
 	_, counts = np.unique(labels, return_counts=True)
 	indices = np.argsort(counts)[::-1] 
@@ -36,6 +39,7 @@ for path in img_paths:
 	clr_ordered = palette[indices]
 	counts_ordered = counts[indices]
 	
+	# output the results into the csv
 	out = [re.findall(r"\/(.*)_UTC", path)[0]]
 	for i in range(n_colors):
 		out.append(str(clr_ordered[i, 0]))
